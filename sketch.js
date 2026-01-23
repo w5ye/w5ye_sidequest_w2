@@ -228,7 +228,7 @@ function draw() {
   // HUD
   fill(0);
   text(
-    "Hold arrow keys = ANGRY MODE  |  A/D or ←/→ Move  |  Space/W/↑ Jump",
+    "Hold spacebar = ANGRY MODE  |  A/D or ←/→ Move  |  Space/W/↑ Jump",
     10,
     18,
   );
