@@ -1,92 +1,179 @@
 // Y-position of the floor (ground level)
 let floorY3;
 
+// Angry mode flag
+let angryMode = false;
+
 // Player character (soft, animated blob)
 let blob3 = {
-  // Position (centre of the blob)
   x: 80,
   y: 0,
 
   // Visual properties
-  r: 26, // Base radius
-  points: 48, // Number of points used to draw the blob
-  wobble: 7, // Edge deformation amount
-  wobbleFreq: 0.9,
+  r: 26,
+  points: 48,
+  wobble: 7,
+  wobbleFreq: 1.8,
 
-  // Time values for breathing animation
   t: 0,
   tSpeed: 0.01,
 
-  // Physics: velocity
-  vx: 0, // Horizontal velocity
-  vy: 0, // Vertical velocity
+  // Physics
+  vx: 0,
+  vy: 0,
 
-  // Movement tuning
-  accel: 0.55, // Horizontal acceleration
-  maxRun: 4.0, // Maximum horizontal speed
-  gravity: 0.65, // Downward force
-  jumpV: -11.0, // Initial jump impulse
+  accel: 0.55,
+  maxRun: 4.0,
+  gravity: 0.65,
+  jumpV: -11.0,
 
-  // State
-  onGround: false, // True when standing on a platform
+  onGround: false,
 
-  // Friction
-  frictionAir: 0.995, // Light friction in air
-  frictionGround: 0.88, // Stronger friction on ground
+  frictionAir: 0.995,
+  frictionGround: 0.88,
 };
 
-// List of solid platforms the blob can stand on
-// Each platform is an axis-aligned rectangle (AABB)
+// Platforms
 let platforms = [];
 
 function setup() {
   createCanvas(640, 360);
 
-  // Define the floor height
   floorY3 = height - 36;
 
   noStroke();
   textFont("sans-serif");
   textSize(14);
 
-  // Create platforms (floor + steps)
   platforms = [
-    { x: 0, y: floorY3, w: width, h: height - floorY3 }, // floor
-    { x: 120, y: floorY3 - 70, w: 120, h: 12 }, // low step
-    { x: 300, y: floorY3 - 120, w: 90, h: 12 }, // mid step
-    { x: 440, y: floorY3 - 180, w: 130, h: 12 }, // high step
-    { x: 520, y: floorY3 - 70, w: 90, h: 12 }, // return ramp
+    {
+      x: 0,
+      y: floorY3,
+      w: width,
+      h: height - floorY3,
+      breakable: false,
+      move: false,
+    },
+
+    {
+      x: 120,
+      y: floorY3 - 70,
+      w: 120,
+      h: 12,
+      breakable: true,
+      move: true,
+      dir: 1,
+    },
+    {
+      x: 300,
+      y: floorY3 - 120,
+      w: 90,
+      h: 12,
+      breakable: true,
+      move: true,
+      dir: -1,
+    },
+    {
+      x: 440,
+      y: floorY3 - 180,
+      w: 130,
+      h: 12,
+      breakable: true,
+      move: true,
+      dir: 1,
+    },
+    {
+      x: 520,
+      y: floorY3 - 70,
+      w: 90,
+      h: 12,
+      breakable: true,
+      move: true,
+      dir: -1,
+    },
   ];
 
-  // Start the blob resting on the floor
   blob3.y = floorY3 - blob3.r - 1;
 }
 
 function draw() {
   background(240);
+  // 🔥 Angry mode ONLY when holding space
+  angryMode = keyIsDown(32);
 
-  // --- Draw all platforms ---
-  fill(200);
+  // 🔄 Switch physics based on emotion
+  if (angryMode) {
+    background(245, 164, 66);
+    // 🔥 Angry background text
+    push();
+    fill(191, 48, 19);
+    textAlign(CENTER, CENTER);
+    textSize(96);
+    text("AHHHH!", width / 2, height / 2);
+    pop();
+    blob3.points = 15;
+    blob3.wobble = 20;
+    blob3.wobbleFreq = 2.8;
+    blob3.accel = 1.2;
+    blob3.maxRun = 7.0;
+    blob3.jumpV = -18.0;
+    blob3.gravity = 0.75;
+    blob3.frictionGround = 0.95;
+    blob3.tSpeed = 0.04;
+    blob3.wobble = 14;
+  } else {
+    background(240);
+    blob3.r = 26;
+    blob3.points = 48;
+    blob3.wobble = 7;
+    blob3.wobbleFreq = 1.8;
+    blob3.accel = 0.55;
+    blob3.maxRun = 4.0;
+    blob3.jumpV = -11.0;
+    blob3.gravity = 0.65;
+    blob3.frictionGround = 0.88;
+    blob3.tSpeed = 0.01;
+    blob3.wobble = 7;
+  }
+
+  // 🔥 Move platforms when angry
+  if (angryMode) {
+    for (const p of platforms) {
+      if (p.move) {
+        p.x += 1.5 * p.dir;
+
+        // Bounce off screen edges
+        if (p.x < 0 || p.x + p.w > width) {
+          p.dir *= -1;
+        }
+      }
+    }
+  }
+
+  // Draw platforms
+  if (angryMode) {
+    fill(122, 10, 10);
+  } else {
+    fill(200);
+  }
+
   for (const p of platforms) {
     rect(p.x, p.y, p.w, p.h);
   }
 
-  // --- Input: left/right movement ---
+  // Input (A/D or arrows)
   let move = 0;
-  if (keyIsDown(65) || keyIsDown(LEFT_ARROW)) move -= 1; // A or ←
-  if (keyIsDown(68) || keyIsDown(RIGHT_ARROW)) move += 1; // D or →
+  if (keyIsDown(65) || keyIsDown(LEFT_ARROW)) move -= 1;
+  if (keyIsDown(68) || keyIsDown(RIGHT_ARROW)) move += 1;
   blob3.vx += blob3.accel * move;
 
-  // --- Apply friction and clamp speed ---
   blob3.vx *= blob3.onGround ? blob3.frictionGround : blob3.frictionAir;
   blob3.vx = constrain(blob3.vx, -blob3.maxRun, blob3.maxRun);
 
-  // --- Apply gravity ---
+  // Gravity
   blob3.vy += blob3.gravity;
 
-  // --- Collision representation ---
-  // We collide using a rectangle (AABB),
-  // even though the blob is drawn as a circle
+  // Collision box
   let box = {
     x: blob3.x - blob3.r,
     y: blob3.y - blob3.r,
@@ -94,102 +181,113 @@ function draw() {
     h: blob3.r * 2,
   };
 
-  // --- STEP 1: Move horizontally, then resolve X collisions ---
+  // Horizontal collision
   box.x += blob3.vx;
   for (const s of platforms) {
     if (overlap(box, s)) {
-      if (blob3.vx > 0) {
-        // Moving right → hit the left side of a platform
-        box.x = s.x - box.w;
-      } else if (blob3.vx < 0) {
-        // Moving left → hit the right side of a platform
-        box.x = s.x + s.w;
-      }
+      if (blob3.vx > 0) box.x = s.x - box.w;
+      else if (blob3.vx < 0) box.x = s.x + s.w;
       blob3.vx = 0;
     }
   }
 
-  // --- STEP 2: Move vertically, then resolve Y collisions ---
+  // Vertical collision
   box.y += blob3.vy;
   blob3.onGround = false;
 
   for (const s of platforms) {
     if (overlap(box, s)) {
       if (blob3.vy > 0) {
-        // Falling → land on top of a platform
+        // Landing
         box.y = s.y - box.h;
         blob3.vy = 0;
         blob3.onGround = true;
       } else if (blob3.vy < 0) {
-        // Rising → hit the underside of a platform
-        box.y = s.y + s.h;
-        blob3.vy = 0;
+        // Hit from below
+        if (s.breakable && angryMode) {
+          platforms = platforms.filter((p) => p !== s);
+          blob3.vy *= -0.3;
+        } else {
+          box.y = s.y + s.h;
+          blob3.vy = 0;
+        }
       }
     }
   }
 
-  // --- Convert collision box back to blob centre ---
   blob3.x = box.x + box.w / 2;
   blob3.y = box.y + box.h / 2;
 
-  // Keep blob inside the canvas horizontally
   blob3.x = constrain(blob3.x, blob3.r, width - blob3.r);
 
-  // --- Draw the animated blob ---
+  // Animate blob
   blob3.t += blob3.tSpeed;
   drawBlobCircle(blob3);
+  drawAngryEyebrows(blob3);
 
-  // --- HUD ---
+  // HUD
   fill(0);
-  text("Move: A/D or ←/→  •  Jump: Space/W/↑  •  Land on platforms", 10, 18);
+  text(
+    "Hold arrow keys = ANGRY MODE  |  A/D or ←/→ Move  |  Space/W/↑ Jump",
+    10,
+    18,
+  );
+}
+function drawAngryEyebrows(b) {
+  if (!angryMode) return;
+
+  push();
+  stroke(60, 0, 0);
+  strokeWeight(4);
+  noFill();
+
+  const eyeY = b.y - b.r * 0.25;
+  const spacing = b.r * 0.45;
+  const size = b.r * 0.25;
+
+  // Left eyebrow ( \ )
+  line(b.x - spacing - size, eyeY - size, b.x - spacing + size, eyeY + size);
+
+  // Right eyebrow ( / )
+  line(b.x + spacing - size, eyeY + size, b.x + spacing + size, eyeY - size);
+
+  pop();
 }
 
-// Axis-Aligned Bounding Box (AABB) overlap test
-// Returns true if rectangles a and b intersect
+// AABB collision
 function overlap(a, b) {
   return (
     a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
   );
 }
 
-// Draws the blob using Perlin noise for a soft, breathing effect
+// Draw blob
 function drawBlobCircle(b) {
-  fill(20, 120, 255);
-  beginShape();
+  if (angryMode) fill(220, 60, 40);
+  else fill(20, 120, 255);
 
+  beginShape();
   for (let i = 0; i < b.points; i++) {
     const a = (i / b.points) * TAU;
 
-    // Noise-based radius offset
     const n = noise(
-      cos(a) * b.wobbleFreq + 100,
-      sin(a) * b.wobbleFreq + 100,
+      cos(a) * b.wobbleFreq + 200,
+      sin(a) * b.wobbleFreq + 200,
       b.t,
     );
 
     const r = b.r + map(n, 0, 1, -b.wobble, b.wobble);
+    const jitter = angryMode ? random(-0.6, 0.6) : 0;
 
-    vertex(b.x + cos(a) * r, b.y + sin(a) * r);
+    vertex(b.x + cos(a) * r + jitter, b.y + sin(a) * r + jitter);
   }
-
   endShape(CLOSE);
 }
 
-// Jump input (only allowed when grounded)
+// Jump
 function keyPressed() {
-  if (
-    (key === " " || key === "W" || key === "w" || keyCode === UP_ARROW) &&
-    blob3.onGround
-  ) {
+  if ((key === "W" || key === "w" || keyCode === UP_ARROW) && blob3.onGround) {
     blob3.vy = blob3.jumpV;
     blob3.onGround = false;
   }
 }
-
-/* In-class tweaks for experimentation:
-   • Add a new platform:
-     platforms.push({ x: 220, y: floorY3 - 150, w: 80, h: 12 });
-
-   • “Ice” feel → frictionGround = 0.95
-   • “Sand” feel → frictionGround = 0.80
-*/

@@ -1,28 +1,24 @@
 ## Project Title
 
-GBDA302 Week 2 Example 3: Platforms (AABB Collisions)
+GBDA302 Side Quest Week 2
 
 ---
 
-## Authors
+## Group Members
 
-Karen Cochrane and David Han
+Wen Ye, w5ye, 21089769
 
 ---
 
 ## Description
 
-Adds several rectangular platforms. The blob is drawn as a noisy circle but collides using a simple axis-aligned bounding box (AABB). X and Y are resolved separately to keep behaviour predictable and teachable.
+Based on the Example 3 code, the game adds an "ANGRY MODE" which features several changes to the blob's environment and movement.
 
 ---
 
-## Learning Goals
+## Setup and Interaction Instructions
 
-Learning Goals:
-
-- Convert a circular sprite to an AABB for collision
-- Implement overlap test and push-out resolution
-- Manage grounded state only when landing on top faces
+The player can trigger "ANGRY MODE" by pressing the space bar while moving the up, down, left, and right arrow keys. "ANGRY MODE" triggers the previously still platforms to move across the screen. The platforms can also be "smashed in anger" if the blob jumps directly underneath it.
 
 ---
 
@@ -34,6 +30,4 @@ N/A
 
 ## GenAI
 
-The code was written by Dr. Karen Cochrane but she used GenAI to write the comments.
-
----
+GenAI was used to ideate and edit this code, written by Dr. Karen Cochrane, for the purposes of this side quest.
